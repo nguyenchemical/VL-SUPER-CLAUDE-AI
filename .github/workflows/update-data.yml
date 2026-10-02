@@ -10,11 +10,13 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
-      - run: node fetch-data.mjs
+          node-version: 22
+      - run: npm install playwright@1 --no-save
+      - run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a node fetch-data.mjs
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
