@@ -64,15 +64,17 @@ const body = (g) => JSON.stringify({ ORenderInfo: ORI, GameDrawId: "", ArrayNumb
 const isCh = (t) => /Just a moment|Attention Required|Checking your browser/i.test(t);
 fs.mkdirSync("data", { recursive: true });
 const status = { updated: new Date().toISOString(), games: {} };
-let browser, page, blocked = null;
+let browser, ctx, page, blocked = null;
 try {
   browser = await chromium.launch({ headless: false, args: ["--disable-blink-features=AutomationControlled"] });
-  const ctx = await browser.newContext({ locale: "vi-VN", timezoneId: "Asia/Ho_Chi_Minh", viewport: { width: 1280, height: 900 } });
+  ctx = await browser.newContext({ locale: "vi-VN", timezoneId: "Asia/Ho_Chi_Minh", viewport: { width: 1280, height: 900 } });
   page = await ctx.newPage();
   await page.goto("https://vietlott.vn/vi/trung-thuong/ket-qua-trung-thuong/645", { waitUntil: "domcontentloaded", timeout: 60000 });
   for (let i = 0; i < 30 && isCh(await page.title()); i++) await page.waitForTimeout(2000);
   const t = await page.title();
   if (isCh(t)) blocked = `Cloudflare challenge không vượt qua (title: ${t})`;
+  await page.screenshot({ path: "data/debug.png" });
+  fs.writeFileSync("data/debug.json", JSON.stringify({ title: t, url: page.url(), cookies: (await ctx.cookies()).map((c) => c.name), blocked }));
 } catch (e) { blocked = "Không mở được vietlott.vn bằng trình duyệt: " + String(e.message || e).slice(0, 200); }
 
 async function pullB(k) {
